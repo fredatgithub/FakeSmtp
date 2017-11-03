@@ -9,113 +9,112 @@ using netDumbster.smtp;
 
 namespace FakeSmtp.Models
 {
-	[DataContract]
-	public class Email
-	{
-		[DataMember]
-		public int Id { get; set; }
+  [DataContract]
+  public class Email
+  {
+    [DataMember]
+    public int Id { get; set; }
 
-		[DataMember]
-		public string From { get; set; }
-		
-		[DataMember]
-		public string To { get; set; }
-		
-		[DataMember]
-		public string Cc { get; set; }
-		
-		[DataMember]
-		public string Bcc { get; set; }
-		
-		[DataMember]
-		public DateTime SentDate { get; set; }
+    [DataMember]
+    public string From { get; set; }
 
-		[DataMember]
-		public string Subject { get; set; }
-		
-		[DataMember]
-		public string Body { get; set; }
+    [DataMember]
+    public string To { get; set; }
 
-		[DataMember]
-		public Boolean IsBodyHtml { get; set; }
+    [DataMember]
+    public string Cc { get; set; }
 
-		[DataMember]
-		public string Importance { get; set; }
+    [DataMember]
+    public string Bcc { get; set; }
 
-		[DataMember]
-		public List<Attachment> Attachments { get; set; }
+    [DataMember]
+    public DateTime SentDate { get; set; }
 
-		[DataMember]
-		public string RawData { get; set; }
-		
+    [DataMember]
+    public string Subject { get; set; }
 
-		public Email(SmtpMessage smtpMessage, int index, bool withoutRawData = false)
-		{
-			MailMessage mailMessage = Helpers.MailMessageMimeParser.ParseMessage(new StringReader(smtpMessage.Data));
+    [DataMember]
+    public string Body { get; set; }
 
-			Id = index;
+    [DataMember]
+    public bool IsBodyHtml { get; set; }
 
-		    From = mailMessage.From.Address;
-		    To = String.Join("; ", mailMessage.To);
-            Cc  = String.Join("; ", mailMessage.CC);
-            Bcc = GetBcc(smtpMessage, mailMessage);
+    [DataMember]
+    public string Importance { get; set; }
 
-            SentDate = mailMessage.Headers["Date"].AsDateTime();
+    [DataMember]
+    public List<Attachment> Attachments { get; set; }
 
-            Subject = mailMessage.Subject;
+    [DataMember]
+    public string RawData { get; set; }
 
-			Body = mailMessage.Body;
-			
-			RawData = withoutRawData ? "" : smtpMessage.Data;
 
-            IsBodyHtml = mailMessage.IsBodyHtml;
+    public Email(SmtpMessage smtpMessage, int index, bool withoutRawData = false)
+    {
+      MailMessage mailMessage = Helpers.MailMessageMimeParser.ParseMessage(new StringReader(smtpMessage.Data));
 
-			switch (smtpMessage.Importance)
-			{
-				case "high":
-					Importance = "High";
-					break;
-				case "low":
-					Importance = "Low";
-					break;
-				default:
-					Importance = "Normal";
-					break;
-			}
+      Id = index;
 
-			Attachments = new List<Attachment>();
+      From = mailMessage.From.Address;
+      To = string.Join("; ", mailMessage.To);
+      Cc = string.Join("; ", mailMessage.CC);
+      Bcc = GetBcc(smtpMessage, mailMessage);
 
-			for (var i = 0; i < mailMessage.Attachments.Count; i++)
-			{
-				var attachment  = new Attachment
-				{
-					Id = i + 1,
-					Name = mailMessage.Attachments[i].ContentType.Name,
-					ContentStream = (MemoryStream) mailMessage.Attachments[i].ContentStream
-				};
+      SentDate = mailMessage.Headers["Date"].AsDateTime();
 
-				attachment.SetSize(attachment.ContentStream.Capacity);
+      Subject = mailMessage.Subject;
 
-				Attachments.Add(attachment);
-			}
-		}
+      Body = mailMessage.Body;
 
-		private string GetBcc(SmtpMessage smtpMessage, MailMessage mailMessage )
-		{
-			String[] toArray = mailMessage.To.Select(to => to.Address).ToArray();
-			String[] ccArray = mailMessage.CC.Select(cc => cc.Address).ToArray();
-			var bccList = new List<string>();
+      RawData = withoutRawData ? "" : smtpMessage.Data;
 
-			foreach (var to in smtpMessage.ToAddresses)
-			{
-				if (!toArray.Contains(to.Address) && !ccArray.Contains(to.Address))
-				{
-					bccList.Add(to.Address);
-				}
-			}
+      IsBodyHtml = mailMessage.IsBodyHtml;
 
-			return (bccList.Count == 0) ? null : String.Join("; ", bccList.ToArray());
-		}
-	}
+      switch (smtpMessage.Importance)
+      {
+        case "high":
+          Importance = "High";
+          break;
+        case "low":
+          Importance = "Low";
+          break;
+        default:
+          Importance = "Normal";
+          break;
+      }
 
+      Attachments = new List<Attachment>();
+
+      for (var i = 0; i < mailMessage.Attachments.Count; i++)
+      {
+        var attachment = new Attachment
+        {
+          Id = i + 1,
+          Name = mailMessage.Attachments[i].ContentType.Name,
+          ContentStream = (MemoryStream)mailMessage.Attachments[i].ContentStream
+        };
+
+        attachment.SetSize(attachment.ContentStream.Capacity);
+
+        Attachments.Add(attachment);
+      }
+    }
+
+    private string GetBcc(SmtpMessage smtpMessage, MailMessage mailMessage)
+    {
+      string[] toArray = mailMessage.To.Select(to => to.Address).ToArray();
+      string[] ccArray = mailMessage.CC.Select(cc => cc.Address).ToArray();
+      var bccList = new List<string>();
+
+      foreach (var to in smtpMessage.ToAddresses)
+      {
+        if (!toArray.Contains(to.Address) && !ccArray.Contains(to.Address))
+        {
+          bccList.Add(to.Address);
+        }
+      }
+
+      return (bccList.Count == 0) ? null : string.Join("; ", bccList.ToArray());
+    }
+  }
 }
